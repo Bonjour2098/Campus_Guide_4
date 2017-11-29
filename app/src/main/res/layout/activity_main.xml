@@ -13,6 +13,7 @@
             android:layout_height="match_parent"
             android:layout_alignParentLeft="true"
             android:layout_alignParentTop="true" >
+
         </com.amap.api.maps.MapView>
 
     </RelativeLayout>
@@ -160,6 +161,17 @@
         android:layout_toEndOf="@+id/button_1"
         android:layout_toRightOf="@+id/button_1"
         android:text="时间消费" />
+
+    <Button
+        android:id="@+id/buttonNavi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignEnd="@+id/button_1"
+        android:layout_alignLeft="@+id/button_1"
+        android:layout_alignRight="@+id/button_1"
+        android:layout_alignStart="@+id/button_1"
+        android:layout_below="@+id/button_1"
+        android:text="导航" />
 
 </RelativeLayout>
 

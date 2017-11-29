@@ -16,11 +16,15 @@ import android.widget.TextView;
 import android.widget.Button;
 
 
+import com.amap.api.location.AMapLocationClient;
+import com.amap.api.location.AMapLocationClientOption;
+import com.amap.api.location.AMapLocationListener;
 import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.model.BitmapDescriptor;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
+import com.amap.api.maps.model.Circle;
 import com.amap.api.maps.model.CircleOptions;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.LatLngBounds;
@@ -28,6 +32,7 @@ import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
 import com.amap.api.maps.model.MyLocationStyle;
 import com.amap.api.maps.model.Text;
+import com.amap.api.navi.model.NaviLatLng;
 import com.amap.api.services.core.AMapException;
 import com.amap.api.services.core.LatLonPoint;
 import com.amap.api.services.core.PoiItem;
@@ -37,6 +42,7 @@ import com.amap.api.services.poisearch.PoiSearch;
 import com.amap.api.location.AMapLocation;
 
 import com.example.aywry.campus_guide_4.HeatMap.TimeSpendActivity;
+import com.example.aywry.campus_guide_4.Navi.WalkNaviActivity;
 import com.example.aywry.campus_guide_4.route.WalkRouteActivity;
 import com.example.aywry.campus_guide_4.uTil.Constants;
 import com.example.aywry.campus_guide_4.uTil.Data;
@@ -50,7 +56,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
         AMap.OnMapClickListener, AMap.OnInfoWindowClickListener, AMap.InfoWindowAdapter, AMap.OnMarkerClickListener,
-        PoiSearch.OnPoiSearchListener {
+        PoiSearch.OnPoiSearchListener,AMapLocationListener {
 
     private MapView mapview;
     private AMap mAMap;
@@ -65,6 +71,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private PoiSearch poiSearch;
     private myPoiOverlay poiOverlay;// poi图层
     private List<PoiItem> poiItems;// poi数据
+    //Location
+    private AMapLocationClient mLocationClient;
+    private AMapLocationClientOption mLocationOption;
+    private AMapLocation mCurrentLocation;
+    private Marker mLocationMarker;
+    private Circle mLocationCircle;
 
     private RelativeLayout mPoiDetail;
     private TextView mPoiName, mPoiAddress;
@@ -74,6 +86,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button button_guide;
     private Button button_AR;
     private Button button_time;
+    private Button buttonNavi;
+
     private TextView poiInfoText;
     private final int CampusRadius = 800;
 
@@ -84,6 +98,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mapview = (MapView)findViewById(R.id.mapView);
         mapview.onCreate(savedInstanceState);
         init();
+        initLocation();
         button_AR = (Button)findViewById(R.id.button_1);
         button_AR.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -102,6 +117,65 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 startActivity(intent);
             }
         });
+        buttonNavi = (Button)findViewById(R.id.buttonNavi);
+        buttonNavi.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent();
+                intent.setClass(MainActivity.this, WalkNaviActivity.class);
+                intent.putExtra("gps", false);
+                intent.putExtra("start", new NaviLatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+                intent.putExtra("end", new NaviLatLng(Data.getDestinationPointInfo().getLatitude(),
+                        Data.getDestinationPointInfo().getLongitude()));
+                startActivity(intent);
+            }
+        });
+    }
+
+    /**
+     * 初始化定位
+     */
+    private void initLocation() {
+        mLocationOption = new AMapLocationClientOption();
+        mLocationOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
+        mLocationOption.setOnceLocation(true);
+        mLocationClient = new AMapLocationClient(this.getApplicationContext());
+        mLocationClient.setLocationListener(this);
+        mLocationClient.startLocation();
+    }
+
+    private void destroyLocation() {
+        if (mLocationClient != null) {
+            mLocationClient.unRegisterLocationListener(this);
+            mLocationClient.onDestroy();
+        }
+    }
+
+    @Override
+    public void onLocationChanged(AMapLocation aMapLocation) {
+        if (aMapLocation == null || aMapLocation.getErrorCode() != AMapLocation.LOCATION_SUCCESS) {
+            return;
+        }
+        mCurrentLocation = aMapLocation;
+        LatLng curLatLng = new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude());
+        LatLonPoint curLatLngPoint = new LatLonPoint(aMapLocation.getLatitude(), aMapLocation.getLongitude());
+        Data.setStartPoint(curLatLngPoint);
+        /*if (mLocationMarker == null) {
+            MarkerOptions markerOptions = new MarkerOptions();
+            markerOptions.position(curLatLng);
+            markerOptions.anchor(0.5f, 0.5f);
+            markerOptions.icon(BitmapDescriptorFactory.fromResource(R.mipmap.navi_map_gps_locked));
+            mLocationMarker = mAMap.addMarker(markerOptions);
+        }
+        if (mLocationCircle == null) {
+            CircleOptions circleOptions = new CircleOptions();
+            circleOptions.center(curLatLng);
+            circleOptions.radius(aMapLocation.getAccuracy());
+            circleOptions.strokeWidth(2);
+            circleOptions.strokeColor(getResources().getColor(R.color.stroke));
+            circleOptions.fillColor(getResources().getColor(R.color.fill));
+            mLocationCircle = mAMap.addCircle(circleOptions);
+        }*/
     }
 
 
@@ -202,6 +276,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy() {
         super.onDestroy();
         mapview.onDestroy();
+        destroyLocation();
     }
 
     @Override
@@ -294,18 +369,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 button_guide.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        LatLonPoint poiLatLonInfo;
-                        poiLatLonInfo = mCurrentPoi.getLatLonPoint();
-                        Data.setDestinationPoint(mCurrentPoi.getLatLonPoint());//设置目的地坐标
+                        //Data.setDestinationPoint(mCurrentPoi.getLatLonPoint());//设置目的地坐标
                         poiInfoText = (TextView)findViewById(R.id.poiInfoText);
-                        //Constants.setStartPoint(new LatLonPoint(aMapLocation.getLatitude(),aMapLocation.getLongitude()));//设置出发地坐标
-                        //poiInfoText.setText(Constants.getDestinationPointInfo().toString());
-                        //poiInfoText.setText(Double.toString(mAMap.getMyLocation().getLatitude()));
-                        //Constants.setStartPoint(new LatLonPoint(mAMap.getMyLocation().getLatitude(),mAMap.getMyLocation().getLongitude()));
+                        /*
                         Intent intent =new Intent();
                         intent.setClass(MainActivity.this, WalkRouteActivity.class);
                         startActivity(intent);
-
+                        */
+                        if (mCurrentLocation == null) {
+                            return;
+                        }
+                        Intent intent = new Intent();
+                        intent.setClass(MainActivity.this, WalkNaviActivity.class);
+                        intent.putExtra("gps", false);
+                        intent.putExtra("start", new NaviLatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+                        //intent.putExtra("end", new NaviLatLng(Data.getDestinationPointInfo().getLatitude(), Data.getDestinationPointInfo().getLongitude()));
+                        intent.putExtra("end", new NaviLatLng(31.768393,117.201546));
+                        startActivity(intent);
 
                     }
                 });
@@ -546,23 +626,3 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 }
-
-
-
-/*
-                    Intent intent =new Intent();
-                    intent.setClass(MainActivity.this, CameraMapActivity.class);
-                    startActivity(intent);
-
-
-                    button_1 = (Button)findViewById(R.id.button_1);
-        button_1.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                Intent intent =new Intent();
-                intent.setClass(MainActivity.this, CameraMapActivity.class);
-                startActivity(intent);
-            }
-        });
-
-*/

@@ -10,7 +10,7 @@ import com.amap.api.services.core.LatLonPoint;
 
 public class Data {
     private static LatLonPoint StartPoint = new LatLonPoint(31.772106,117.204622);
-    private static LatLonPoint DestinationPoint = new LatLonPoint(0,0);
+    private static LatLonPoint DestinationPoint = new LatLonPoint(31.768393,117.201546);
     private static Color ColorClass1 = new Color();
 
 
