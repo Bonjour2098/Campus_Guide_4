@@ -124,7 +124,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Intent intent = new Intent();
                 intent.setClass(MainActivity.this, WalkNaviActivity.class);
                 intent.putExtra("gps", false);
-                intent.putExtra("start", new NaviLatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+                //intent.putExtra("start", new NaviLatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
+                intent.putExtra("start", new NaviLatLng(31.772106,117.204622));
                 intent.putExtra("end", new NaviLatLng(Data.getDestinationPointInfo().getLatitude(),
                         Data.getDestinationPointInfo().getLongitude()));
                 startActivity(intent);
@@ -160,6 +161,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         LatLng curLatLng = new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude());
         LatLonPoint curLatLngPoint = new LatLonPoint(aMapLocation.getLatitude(), aMapLocation.getLongitude());
         Data.setStartPoint(curLatLngPoint);
+        //LocationText.setText("success!");
         /*if (mLocationMarker == null) {
             MarkerOptions markerOptions = new MarkerOptions();
             markerOptions.position(curLatLng);
@@ -369,7 +371,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 button_guide.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        //Data.setDestinationPoint(mCurrentPoi.getLatLonPoint());//设置目的地坐标
+                        Data.setDestinationPoint(mCurrentPoi.getLatLonPoint());//设置目的地坐标
                         poiInfoText = (TextView)findViewById(R.id.poiInfoText);
                         /*
                         Intent intent =new Intent();
@@ -383,10 +385,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         intent.setClass(MainActivity.this, WalkNaviActivity.class);
                         intent.putExtra("gps", false);
                         intent.putExtra("start", new NaviLatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude()));
-                        //intent.putExtra("end", new NaviLatLng(Data.getDestinationPointInfo().getLatitude(), Data.getDestinationPointInfo().getLongitude()));
-                        intent.putExtra("end", new NaviLatLng(31.768393,117.201546));
+                        intent.putExtra("end", new NaviLatLng(Data.getDestinationPointInfo().getLatitude(), Data.getDestinationPointInfo().getLongitude()));
                         startActivity(intent);
-
                     }
                 });
 

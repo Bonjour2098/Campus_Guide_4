@@ -36,7 +36,9 @@
             android:name="com.example.aywry.campus_guide_4.route.WalkRouteDetailActivity"
             android:label="route_search"
             android:screenOrientation="portrait" />
-
+        <activity android:name=".Navi.WalkNaviActivity"
+            android:label="walk_navi_activity"
+            android:screenOrientation="portrait" />
     </application>
 
 

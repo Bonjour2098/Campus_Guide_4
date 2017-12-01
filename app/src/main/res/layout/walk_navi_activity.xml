@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <com.amap.api.navi.AMapNaviView
+        android:id="@+id/navi_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <TextView
+        android:id="@+id/NaviResultText"
+        android:layout_width="300dp"
+        android:layout_height="200dp"
+        android:layout_marginTop="200dp"
+        android:text="TextView"
+        android:textColor="@color/black"/>
+
+</RelativeLayout>
