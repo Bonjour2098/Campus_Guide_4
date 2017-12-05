@@ -1,14 +1,18 @@
 package com.example.aywry.campus_guide_4.HeatMap;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.widget.SeekBar;
+import android.widget.TextView;
 
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.model.CameraPosition;
+import com.amap.api.maps.model.Circle;
+import com.amap.api.maps.model.CircleOptions;
 import com.amap.api.maps.model.Gradient;
 import com.amap.api.maps.model.HeatmapTileProvider;
 import com.amap.api.maps.model.LatLng;
@@ -17,7 +21,15 @@ import com.amap.api.maps.model.PolygonOptions;
 import com.amap.api.maps.model.TileOverlayOptions;
 import com.example.aywry.campus_guide_4.R;
 import com.example.aywry.campus_guide_4.uTil.Constants;
+import com.example.aywry.campus_guide_4.uTil.Data;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -38,6 +50,16 @@ public class TimeSpendActivity extends Activity implements
     private SeekBar mAlphaBar;
     private SeekBar mWidthBar;
 
+    private Polygon dpolygonTeachingArea;
+    private Polygon dpolygonWestAthleticArea;
+    private Polygon dpolygonLaboratoryArea;
+    private Polygon dpolygonDormitory;
+    private Polygon dpolygonEastAthleticArea;
+    Circle circleLibrary;
+    Circle circleArtSchool;
+
+    private TextView textTemp;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,7 +73,17 @@ public class TimeSpendActivity extends Activity implements
 //        MapsInitializer.sdcardDir =OffLineMapUtils.getSdCacheDir(this);
         mapView = (MapView) findViewById(R.id.map);
         mapView.onCreate(savedInstanceState);// 此方法必须重写
+
+        textTemp = (TextView)findViewById(R.id.textTemp);
         init();
+        load();
+
+
+        textTemp.setText(Data.getTimeSpending(0)+" "+Data.getTimeSpending(1)+" "+
+                Data.getTimeSpending(2)+" "+Data.getTimeSpending(3)+" "+
+                Data.getTimeSpending(4)+" "+Data.getTimeSpending(5)+" "+
+                Data.getTimeSpending(6)+" ");
+
     }
 
     /**
@@ -70,63 +102,66 @@ public class TimeSpendActivity extends Activity implements
 
         aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(Constants.HfutCoordinate, 15.3f));// 设置指定的可视区域地图
 
-        //Teaching Area
-        LatLng latLngTeachingArea1 = new LatLng(31.770783,117.203618);
-        LatLng latLngTeachingArea2 = new LatLng(31.76956,117.203618);
-        LatLng latLngTeachingArea3 = new LatLng(31.768338,117.204101);
-        LatLng latLngTeachingArea4 = new LatLng(31.768338,117.20615);
-        LatLng latLngTeachingArea5 = new LatLng(31.76956,117.206558);
-        LatLng latLngTeachingArea6 = new LatLng(31.770755,117.20658);
-        //CafeteriaEast(1 and 2)
-        LatLng latLngCafeteriaEast1 = new LatLng(31.774819,117.20381);//
-        LatLng latLngCafeteriaEast2 = new LatLng(31.773989,117.203724);//,
-        LatLng latLngCafeteriaEast3 = new LatLng(31.774112,117.204872);//,
-        LatLng latLngCafeteriaEast4 = new LatLng(31.774937,117.204882);//,
-        //AthleticArea
-        LatLng latLngAthleticArea1 = new LatLng(31.774996,117.205274);//
-        LatLng latLngAthleticArea2 = new LatLng(31.773741,117.205295);//,
-        LatLng latLngAthleticArea3 = new LatLng(31.772984,117.205607);//,
-        LatLng latLngAthleticArea4 = new LatLng(31.772246,117.206068);//,
-        LatLng latLngAthleticArea5 = new LatLng(31.772218,117.207613);//,
-        LatLng latLngAthleticArea6 = new LatLng(31.771945,117.207656);//,
-        LatLng latLngAthleticArea7 = new LatLng(31.771945,117.209115);//,
-        LatLng latLngAthleticArea8 = new LatLng(31.773012,117.209372);//,
-        LatLng latLngAthleticArea9 = new LatLng(31.774982,117.209544);//,
-        //LaboratoryArea
-        LatLng latLngLaboratoryArea1 = new LatLng(31.772246,117.206068);//
-        LatLng latLngLaboratoryArea2 = new LatLng(31.770978,117.20654);//,
-        LatLng latLngLaboratoryArea3 = new LatLng(31.769847,117.206701);//,
-        LatLng latLngLaboratoryArea4 = new LatLng(31.769865,117.208332);//,
-        LatLng latLngLaboratoryArea5 = new LatLng(31.771917,117.209104);//,
-        LatLng latLngLaboratoryArea6 = new LatLng(31.771945,117.207656);//
-        LatLng latLngLaboratoryArea7 = new LatLng(31.772218,117.207613);//
-
 
         PolygonOptions polygonTeachingArea = new PolygonOptions();
-        PolygonOptions polygonCafeteriaEast = new PolygonOptions();
-        PolygonOptions polygonAthleticArea = new PolygonOptions();
+        PolygonOptions polygonWestAthleticArea = new PolygonOptions();
         PolygonOptions polygonLaboratoryArea = new PolygonOptions();
+        PolygonOptions polygonDormitory = new PolygonOptions();
+        PolygonOptions polygonEastAthleticArea = new PolygonOptions();
+
+        circleLibrary = aMap.addCircle(new CircleOptions().center(Data.latLng1)
+                .strokeWidth(0)
+                .radius(90)
+                .fillColor(Data.getColorClass()[3]));
+        circleArtSchool = aMap.addCircle(new CircleOptions().center(Data.latLng2)
+                .strokeWidth(0)
+                .radius(60)
+                .fillColor(Data.getColorClass()[4]));
 
 
-        polygonTeachingArea.add(latLngTeachingArea1, latLngTeachingArea2, latLngTeachingArea3,
-                latLngTeachingArea4, latLngTeachingArea5,latLngTeachingArea6);
-        polygonCafeteriaEast.add(latLngCafeteriaEast1,latLngCafeteriaEast2,latLngCafeteriaEast3,
-                latLngCafeteriaEast4);
-        polygonAthleticArea.add(latLngAthleticArea1,latLngAthleticArea2,latLngAthleticArea3,
-                latLngAthleticArea4,latLngAthleticArea5,latLngAthleticArea6,latLngAthleticArea7,
-                latLngAthleticArea8,latLngAthleticArea9);
-        polygonLaboratoryArea.add(latLngLaboratoryArea1,latLngLaboratoryArea2,latLngLaboratoryArea3,
-                latLngLaboratoryArea4,latLngLaboratoryArea5,latLngLaboratoryArea6,latLngLaboratoryArea7);
+        polygonWestAthleticArea.add(Data.latLng4,Data.latLng5,Data.latLng6,Data.latLng7,
+                Data.latLng8);
+        polygonDormitory.add(Data.latLng3,Data.latLng4,Data.latLng8,Data.latLng7,Data.latLng9,
+                Data.latLng10,Data.latLng11,Data.latLng12,Data.latLng13,Data.latLng14,
+                Data.latLng15, Data.latLng16,Data.latLng17,Data.latLng18,Data.latLng19,
+                Data.latLng20,Data.latLng21,Data.latLng22,Data.latLng23,Data.latLng24,
+                Data.latLng25,Data.latLng26,Data.latLng27, Data.latLng28,
+                Data.latLng29,Data.latLng30,Data.latLng31,Data.latLng32);
+        polygonTeachingArea.add(Data.latLng33,Data.latLng34,Data.latLng35,Data.latLng36,
+                Data.latLng37,Data.latLng38,Data.latLng39,Data.latLng40,
+                Data.latLng41,Data.latLng42,Data.latLng43,Data.latLng44);
+        polygonLaboratoryArea.add(Data.latLng45,Data.latLng43,Data.latLng42,Data.latLng58,
+                Data.latLng49,Data.latLng50,Data.latLng51,Data.latLng52,
+                Data.latLng53,Data.latLng57,Data.latLng56);
+        polygonEastAthleticArea.add(Data.latLng46,Data.latLng47,Data.latLng48,
+                Data.latLng45, Data.latLng56,Data.latLng57,Data.latLng53,
+                Data.latLng54, Data.latLng55);
 
 
+        polygonWestAthleticArea.strokeWidth(0)
+                .fillColor(Data.getColorClass()[7]);
+        polygonDormitory.strokeWidth(0)
+                .fillColor(Data.getColorClass()[2]);
+        polygonTeachingArea.strokeWidth(0)
+                .fillColor(Data.getColorClass()[7]);
+        polygonLaboratoryArea.strokeWidth(0)
+                .fillColor(Data.getColorClass()[0]);
+        polygonEastAthleticArea.strokeWidth(0)
+                .fillColor(Data.getColorClass()[5]);
 
-        polygonTeachingArea.strokeWidth(1) // 多边形的边框
-                .strokeColor(Color.argb(50, 1, 1, 1)) // 边框颜色
-                .fillColor(Color.argb(50, 255, 44, 31));   // 多边形的填充色
 
+        dpolygonWestAthleticArea = aMap.addPolygon(polygonWestAthleticArea);
+        dpolygonDormitory = aMap.addPolygon(polygonDormitory);
+        dpolygonTeachingArea = aMap.addPolygon(polygonTeachingArea);
+        dpolygonLaboratoryArea = aMap.addPolygon(polygonLaboratoryArea);
+        dpolygonEastAthleticArea = aMap.addPolygon(polygonEastAthleticArea);
+        /*
+        aMap.addPolygon(polygonWestAthleticArea);
+        aMap.addPolygon(polygonDormitory);
         aMap.addPolygon(polygonTeachingArea);
-
-
+        aMap.addPolygon(polygonLaboratoryArea);
+        aMap.addPolygon(polygonEastAthleticArea);
+        */
     }
 
     /**
@@ -165,19 +200,6 @@ public class TimeSpendActivity extends Activity implements
         mapView.onDestroy();
     }
 
-    /**
-     * 生成一个长方形的四个坐标点
-     */
-    private List<LatLng> createRectangle(LatLng center, double halfWidth,
-                                         double halfHeight) {
-        List<LatLng> latLngs = new ArrayList<LatLng>();
-        latLngs.add(new LatLng(center.latitude - halfHeight, center.longitude - halfWidth));
-        latLngs.add(new LatLng(center.latitude - halfHeight, center.longitude + halfWidth));
-        latLngs.add(new LatLng(center.latitude + halfHeight, center.longitude + halfWidth));
-        latLngs.add(new LatLng(center.latitude + halfHeight, center.longitude - halfWidth));
-        return latLngs;
-    }
-
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
     }
@@ -201,6 +223,111 @@ public class TimeSpendActivity extends Activity implements
             polygon.setStrokeColor(Color.argb(progress, 1, 1, 1));
         } else if (seekBar == mWidthBar) {
             polygon.setStrokeWidth(progress);
+        }
+    }
+
+    public void load() {
+        FileInputStream in = null;
+        BufferedReader reader = null;
+        StringBuilder content = new StringBuilder();
+        try {
+            //设置将要打开的存储文件名称
+            in = openFileInput("TimeSpending");
+            //FileInputStream -> InputStreamReader ->BufferedReader
+            reader = new BufferedReader(new InputStreamReader(in));
+            String line = new String();
+            String line2 = new String();
+            //读取每一行数据，并追加到StringBuilder对象中，直到结束
+
+            while ((line = reader.readLine()) != null) {
+                double lat = Double.parseDouble(line);
+                double lng = 0;
+                if((line2 = reader.readLine()) != null)
+                {
+                    lng = Double.parseDouble(line2);
+                }
+                //textTemp.setText(line+" "+line2);
+                Contains(new LatLng(lat,lng));
+                /*
+                content.append(line);
+                content.append("\n");
+                content.append(line2);
+                content.append("\n");
+                */
+            }
+            //textTemp.setText(content.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        //return content.toString();
+
+        FileOutputStream out = null;
+        BufferedWriter writer = null;
+        try {
+            //设置文件名称，以及存储方式
+            out = openFileOutput("TimeSpending", Context.MODE_PRIVATE);
+            //创建一个OutputStreamWriter对象，传入BufferedWriter的构造器中
+            writer = new BufferedWriter(new OutputStreamWriter(out));
+            //向文件中写入数据
+            writer.write(new String());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    /**
+     * 0 TimeOfLibrary
+     * 1 TimeOfArtSchool
+     * 2 TimeOfWestAthleticArea
+     * 3 TimeOfDormitory
+     * 4 TimeOfTeachingArea
+     * 5 TimeOfEastAthleticArea
+     * 6 TimeOfLaboratoryArea
+     */
+    private void Contains(LatLng v)
+    {
+        if(dpolygonEastAthleticArea.contains(v))
+        {
+            Data.setTimeSpending(5);
+        }
+        else if(dpolygonLaboratoryArea.contains(v))
+        {
+            Data.setTimeSpending(6);
+        }
+        else if(dpolygonTeachingArea.contains(v))
+        {
+            Data.setTimeSpending(4);
+        }
+        else if(dpolygonDormitory.contains(v))
+        {
+            Data.setTimeSpending(3);
+        }
+        else if(dpolygonWestAthleticArea.contains(v))
+        {
+            Data.setTimeSpending(2);
+        }
+        else if(circleArtSchool.contains(v))
+        {
+            Data.setTimeSpending(1);
+        }
+        else if(circleLibrary.contains(v))
+        {
+            Data.setTimeSpending(0);
         }
     }
 }

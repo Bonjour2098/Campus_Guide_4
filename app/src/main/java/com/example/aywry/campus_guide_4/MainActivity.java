@@ -1,11 +1,16 @@
 package com.example.aywry.campus_guide_4;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.support.annotation.RequiresPermission;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.telecom.Connection;
 import android.view.View;
 import android.view.Window;
 import android.widget.CompoundButton;
@@ -42,6 +47,10 @@ import com.amap.api.services.poisearch.PoiSearch;
 import com.amap.api.location.AMapLocation;
 
 import com.example.aywry.campus_guide_4.HeatMap.TimeSpendActivity;
+import com.example.aywry.campus_guide_4.LocationServices.LocationMainActivity;
+import com.example.aywry.campus_guide_4.LocationServices.LocationService;
+import com.example.aywry.campus_guide_4.LocationServices.LocationStatusManager;
+import com.example.aywry.campus_guide_4.LocationServices.Utils;
 import com.example.aywry.campus_guide_4.Navi.WalkNaviActivity;
 import com.example.aywry.campus_guide_4.route.WalkRouteActivity;
 import com.example.aywry.campus_guide_4.uTil.Constants;
@@ -49,6 +58,13 @@ import com.example.aywry.campus_guide_4.uTil.Data;
 import com.example.aywry.campus_guide_4.uTil.ToastUtil;
 import com.example.aywry.campus_guide_4.camera.CameraMapActivity;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,8 +91,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private AMapLocationClient mLocationClient;
     private AMapLocationClientOption mLocationOption;
     private AMapLocation mCurrentLocation;
-    private Marker mLocationMarker;
-    private Circle mLocationCircle;
 
     private RelativeLayout mPoiDetail;
     private TextView mPoiName, mPoiAddress;
@@ -94,17 +108,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //Data.initialTimeSpending();
         setContentView(R.layout.activity_main);
         mapview = (MapView)findViewById(R.id.mapView);
         mapview.onCreate(savedInstanceState);
         init();
         initLocation();
+
+        int temp[] = ReadTimeArray();
+        for(int i=0;i<7;i++) Data.setTimeSpending(i,temp[i]);
+
         button_AR = (Button)findViewById(R.id.button_1);
         button_AR.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent();
-                intent.setClass(MainActivity.this, CameraMapActivity.class);
+                intent.setClass(MainActivity.this, LocationMainActivity.class);
                 startActivity(intent);
             }
         });
@@ -161,23 +180,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         LatLng curLatLng = new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude());
         LatLonPoint curLatLngPoint = new LatLonPoint(aMapLocation.getLatitude(), aMapLocation.getLongitude());
         Data.setStartPoint(curLatLngPoint);
-        //LocationText.setText("success!");
-        /*if (mLocationMarker == null) {
-            MarkerOptions markerOptions = new MarkerOptions();
-            markerOptions.position(curLatLng);
-            markerOptions.anchor(0.5f, 0.5f);
-            markerOptions.icon(BitmapDescriptorFactory.fromResource(R.mipmap.navi_map_gps_locked));
-            mLocationMarker = mAMap.addMarker(markerOptions);
-        }
-        if (mLocationCircle == null) {
-            CircleOptions circleOptions = new CircleOptions();
-            circleOptions.center(curLatLng);
-            circleOptions.radius(aMapLocation.getAccuracy());
-            circleOptions.strokeWidth(2);
-            circleOptions.strokeColor(getResources().getColor(R.color.stroke));
-            circleOptions.fillColor(getResources().getColor(R.color.fill));
-            mLocationCircle = mAMap.addCircle(circleOptions);
-        }*/
     }
 
 
@@ -202,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         }
         setup();
-        mAMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lp.getLatitude(), lp.getLongitude()), 14));
+        mAMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lp.getLatitude(), lp.getLongitude()), 15.3f));
     }
     private void setup() {
         mPoiDetail = (RelativeLayout) findViewById(R.id.poi_detail);
@@ -276,6 +278,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @Override
     protected void onDestroy() {
+        for(int i=0;i<7;i++)SaveTimeArray(Data.getTimeSpending(i));
         super.onDestroy();
         mapview.onDestroy();
         destroyLocation();
@@ -623,6 +626,81 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return icon;
             }
         }
+    }
+
+    private void SaveTimeArray(int a)
+    {
+        FileOutputStream out = null;
+        BufferedWriter writer = null;
+        try {
+            //设置文件名称，以及存储方式
+            out = openFileOutput("TimeArray", Context.MODE_APPEND);
+            //创建一个OutputStreamWriter对象，传入BufferedWriter的构造器中
+            writer = new BufferedWriter(new OutputStreamWriter(out));
+            //向文件中写入数据
+            writer.write(Integer.toString(a));
+            writer.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private int[] ReadTimeArray()
+    {
+        int ret[] = new int[7];
+        FileInputStream in = null;
+        BufferedReader reader = null;
+        StringBuilder content = new StringBuilder();
+        try {
+            //设置将要打开的存储文件名称
+            in = openFileInput("TimeArray");
+            //FileInputStream -> InputStreamReader ->BufferedReader
+            reader = new BufferedReader(new InputStreamReader(in));
+            String line = new String();
+            int i=0;
+            //读取每一行数据，并追加到StringBuilder对象中，直到结束
+            while ((line = reader.readLine()) != null) {
+                ret[i] = Integer.parseInt(line);
+                i++;
+            }
+            //textTemp.setText(content.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        FileOutputStream out = null;
+        BufferedWriter writer = null;
+        try {
+            //设置文件名称，以及存储方式
+            out = openFileOutput("TimeArray", Context.MODE_PRIVATE);
+            //创建一个OutputStreamWriter对象，传入BufferedWriter的构造器中
+            writer = new BufferedWriter(new OutputStreamWriter(out));
+            //向文件中写入数据
+            writer.write(new String());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return ret;
     }
 
 }

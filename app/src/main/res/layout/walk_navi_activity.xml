@@ -4,6 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+
     <com.amap.api.navi.AMapNaviView
         android:id="@+id/navi_view"
         android:layout_width="match_parent"
@@ -13,8 +14,13 @@
         android:id="@+id/NaviResultText"
         android:layout_width="300dp"
         android:layout_height="200dp"
-        android:layout_marginTop="200dp"
+        android:layout_marginTop="100dp"
         android:text="TextView"
         android:textColor="@color/black"/>
+
+    <ListView
+        android:id="@+id/PathList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 </RelativeLayout>

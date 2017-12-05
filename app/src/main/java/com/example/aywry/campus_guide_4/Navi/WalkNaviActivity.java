@@ -51,11 +51,10 @@ public class WalkNaviActivity extends AppCompatActivity implements AMapNaviListe
     TTSController mTtsManager;
     boolean mIsGps;
 
-    private ListView NaviList;
-    private ArrayAdapter<NaviLatLng> NaviListAdapter;
     private TextView NaviResultText;
     private AMapNaviPath mAMapNaviPath;
-    private NaviInfo mNaviInfo;
+    private ListView pathListView;
+    private ArrayAdapter<NaviLatLng> pathAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +69,7 @@ public class WalkNaviActivity extends AppCompatActivity implements AMapNaviListe
         mAMapNaviView.setAMapNaviViewListener(this);
 
         NaviResultText = (TextView)findViewById(R.id.NaviResultText);
+        pathListView = (ListView)findViewById(R.id.PathList);
 
         mAMapNavi = AMapNavi.getInstance(getApplicationContext());
         mAMapNavi.addAMapNaviListener(this);
@@ -183,7 +183,6 @@ public class WalkNaviActivity extends AppCompatActivity implements AMapNaviListe
 
     @Override
     public void onArriveDestination() {
-        NaviResultText.setText("Success!");
     }
 
     @Override
@@ -239,6 +238,7 @@ public class WalkNaviActivity extends AppCompatActivity implements AMapNaviListe
     @Deprecated
     @Override
     public void onNaviInfoUpdated(AMapNaviInfo naviInfo) {
+        //该方法已过时
     }
 
     @Override
@@ -286,18 +286,17 @@ public class WalkNaviActivity extends AppCompatActivity implements AMapNaviListe
 
     @Override
     public void onCalculateRouteSuccess(int[] ints) {
+        mAMapNaviPath = mAMapNavi.getNaviPath();
+        //NaviResultText.setText(mAMapNaviPath.getCoordList().size()+"");
+        pathAdapter = new ArrayAdapter<NaviLatLng>(this,
+                android.R.layout.simple_list_item_1,mAMapNaviPath.getCoordList());
+        pathListView.setAdapter(pathAdapter);
+
         if (mIsGps) {
             mAMapNavi.startNavi(AMapNavi.GPSNaviMode);
-
         } else {
             mAMapNavi.startNavi(AMapNavi.EmulatorNaviMode);
         }
-
-        /* 可以删除
-        HashMap<Integer,AMapNaviPath> Paths = mAMapNavi.getNaviPaths();
-        mAMapNaviPath = mAMapNavi.getNaviPath();
-        NaviResultText.setText(ints.length+"");
-        */
     }
 
     @Override

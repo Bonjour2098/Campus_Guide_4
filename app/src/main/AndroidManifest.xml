@@ -13,6 +13,24 @@
             android:name="com.amap.api.v2.apikey"
             android:value="cd1904d9c1df0bd356747015d1527c2a">
         </meta-data>
+
+        <service
+            android:name=".LocationServices.LocationService"
+            android:process=":remote1">
+            <intent-filter>
+                <action android:name="com.example.aywry.campus_guide_4.LocationServices.LocationService"></action>
+            </intent-filter>
+        </service>
+        <service
+            android:name=".LocationServices.LocationHelperService"
+            android:process=":remote2">
+            <intent-filter>
+                <action android:name="com.example.aywry.campus_guide_4.LocationServices.LocationHelperService"></action>
+            </intent-filter>
+        </service>
+        <!-- 定位需要的服务 -->
+        <service android:name="com.amap.api.location.APSService"></service>
+
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -39,6 +57,9 @@
         <activity android:name=".Navi.WalkNaviActivity"
             android:label="walk_navi_activity"
             android:screenOrientation="portrait" />
+        <activity android:name=".LocationServices.LocationMainActivity"
+            android:label="walk_navi_activity"
+            android:screenOrientation="portrait" />
     </application>
 
 
@@ -63,5 +84,12 @@
     <!--用于申请获取蓝牙信息进行室内定位-->
     <uses-permission android:name="android.permission.BLUETOOTH"></uses-permission>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"></uses-permission>
+    <!-- 不是SDK需要的权限，是示例中的后台唤醒定位需要的权限 -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!--写入扩展存储，向扩展卡写入数据，用于写入缓存定位数据-->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!--读取缓存数据-->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
 
 </manifest>
