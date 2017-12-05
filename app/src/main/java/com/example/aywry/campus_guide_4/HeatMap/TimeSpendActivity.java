@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -25,6 +27,7 @@ import com.example.aywry.campus_guide_4.uTil.Data;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -59,6 +62,7 @@ public class TimeSpendActivity extends Activity implements
     Circle circleArtSchool;
 
     private TextView textTemp;
+    private Button FileTimeArray;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,12 +82,12 @@ public class TimeSpendActivity extends Activity implements
         init();
         load();
 
-
         textTemp.setText(Data.getTimeSpending(0)+" "+Data.getTimeSpending(1)+" "+
                 Data.getTimeSpending(2)+" "+Data.getTimeSpending(3)+" "+
                 Data.getTimeSpending(4)+" "+Data.getTimeSpending(5)+" "+
                 Data.getTimeSpending(6)+" ");
 
+        SetUpTimeMap();
     }
 
     /**
@@ -112,11 +116,11 @@ public class TimeSpendActivity extends Activity implements
         circleLibrary = aMap.addCircle(new CircleOptions().center(Data.latLng1)
                 .strokeWidth(0)
                 .radius(90)
-                .fillColor(Data.getColorClass()[3]));
+                .fillColor(Color.argb(0,0,0,0)));
         circleArtSchool = aMap.addCircle(new CircleOptions().center(Data.latLng2)
                 .strokeWidth(0)
                 .radius(60)
-                .fillColor(Data.getColorClass()[4]));
+                .fillColor(Color.argb(0,0,0,0)));
 
 
         polygonWestAthleticArea.add(Data.latLng4,Data.latLng5,Data.latLng6,Data.latLng7,
@@ -139,15 +143,15 @@ public class TimeSpendActivity extends Activity implements
 
 
         polygonWestAthleticArea.strokeWidth(0)
-                .fillColor(Data.getColorClass()[7]);
+                .fillColor(Color.argb(0,0,0,0));
         polygonDormitory.strokeWidth(0)
-                .fillColor(Data.getColorClass()[2]);
+                .fillColor(Color.argb(0,0,0,0));
         polygonTeachingArea.strokeWidth(0)
-                .fillColor(Data.getColorClass()[7]);
+                .fillColor(Color.argb(0,0,0,0));
         polygonLaboratoryArea.strokeWidth(0)
-                .fillColor(Data.getColorClass()[0]);
+                .fillColor(Color.argb(0,0,0,0));
         polygonEastAthleticArea.strokeWidth(0)
-                .fillColor(Data.getColorClass()[5]);
+                .fillColor(Color.argb(0,0,0,0));
 
 
         dpolygonWestAthleticArea = aMap.addPolygon(polygonWestAthleticArea);
@@ -155,13 +159,6 @@ public class TimeSpendActivity extends Activity implements
         dpolygonTeachingArea = aMap.addPolygon(polygonTeachingArea);
         dpolygonLaboratoryArea = aMap.addPolygon(polygonLaboratoryArea);
         dpolygonEastAthleticArea = aMap.addPolygon(polygonEastAthleticArea);
-        /*
-        aMap.addPolygon(polygonWestAthleticArea);
-        aMap.addPolygon(polygonDormitory);
-        aMap.addPolygon(polygonTeachingArea);
-        aMap.addPolygon(polygonLaboratoryArea);
-        aMap.addPolygon(polygonEastAthleticArea);
-        */
     }
 
     /**
@@ -267,27 +264,8 @@ public class TimeSpendActivity extends Activity implements
                 }
             }
         }
-        //return content.toString();
-
-        FileOutputStream out = null;
-        BufferedWriter writer = null;
-        try {
-            //设置文件名称，以及存储方式
-            out = openFileOutput("TimeSpending", Context.MODE_PRIVATE);
-            //创建一个OutputStreamWriter对象，传入BufferedWriter的构造器中
-            writer = new BufferedWriter(new OutputStreamWriter(out));
-            //向文件中写入数据
-            writer.write(new String());
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                writer.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
+        ResetTimeSpending();
+        SaveTimeArray();
     }
 
     /**
@@ -330,4 +308,136 @@ public class TimeSpendActivity extends Activity implements
             Data.setTimeSpending(0);
         }
     }
+
+    private void SaveTimeArray()
+    {
+        FileOutputStream out = null;
+        BufferedWriter writer = null;
+        try {
+            //设置文件名称，以及存储方式
+            out = openFileOutput("TimeArray", Context.MODE_PRIVATE);
+            //创建一个OutputStreamWriter对象，传入BufferedWriter的构造器中
+            writer = new BufferedWriter(new OutputStreamWriter(out));
+            //向文件中写入数据
+            for(int i=0;i<7;i++)
+            {
+                writer.write(Integer.toString(Data.getTimeSpending(i)));
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void ResetTimeSpending()
+    {
+        FileOutputStream out = null;
+        BufferedWriter writer = null;
+        try {
+            //设置文件名称，以及存储方式
+            out = openFileOutput("TimeSpending", Context.MODE_PRIVATE);
+            //创建一个OutputStreamWriter对象，传入BufferedWriter的构造器中
+            writer = new BufferedWriter(new OutputStreamWriter(out));
+            //向文件中写入数据
+            writer.write(new String());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private int[] ReadTimeArray()
+    {
+        int ret[] = new int[7];
+        FileInputStream in = null;
+        BufferedReader reader = null;
+        StringBuilder content = new StringBuilder();
+        try {
+            //设置将要打开的存储文件名称
+            in = openFileInput("TimeArray");
+            //FileInputStream -> InputStreamReader ->BufferedReader
+            reader = new BufferedReader(new InputStreamReader(in));
+            String line = new String();
+            int i=0;
+            //读取每一行数据，并追加到StringBuilder对象中，直到结束
+            while ((line = reader.readLine()) != null) {
+                ret[i] = Integer.parseInt(line);
+                i++;
+            }
+            //textTemp.setText(content.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return ret;
+    }
+
+    private void SetUpTimeMap()
+    {
+        Circle showCircleLibrary;
+        Circle showCircleArtSchool;
+        PolygonOptions showPolygonTeachingArea = new PolygonOptions();
+        PolygonOptions showPolygonWestAthleticArea = new PolygonOptions();
+        PolygonOptions showPolygonLaboratoryArea = new PolygonOptions();
+        PolygonOptions showPolygonDormitory = new PolygonOptions();
+        PolygonOptions showPolygonEastAthleticArea = new PolygonOptions();
+
+        showCircleLibrary = aMap.addCircle(new CircleOptions().center(Data.latLng1)
+                .strokeWidth(0)
+                .radius(90)
+                .fillColor(Data.getColorClass()[Data.DetermineTimeClass(Data.getTimeSpending(0))]));
+        showCircleArtSchool = aMap.addCircle(new CircleOptions().center(Data.latLng2)
+                .strokeWidth(0)
+                .radius(60)
+                .fillColor(Data.getColorClass()[Data.DetermineTimeClass(Data.getTimeSpending(1))]));
+
+
+        showPolygonWestAthleticArea.add(Data.latLng4,Data.latLng5,Data.latLng6,Data.latLng7,
+                Data.latLng8);
+        showPolygonDormitory.add(Data.latLng3,Data.latLng4,Data.latLng8,Data.latLng7,Data.latLng9,
+                Data.latLng10,Data.latLng11,Data.latLng12,Data.latLng13,Data.latLng14,
+                Data.latLng15, Data.latLng16,Data.latLng17,Data.latLng18,Data.latLng19,
+                Data.latLng20,Data.latLng21,Data.latLng22,Data.latLng23,Data.latLng24,
+                Data.latLng25,Data.latLng26,Data.latLng27, Data.latLng28,
+                Data.latLng29,Data.latLng30,Data.latLng31,Data.latLng32);
+        showPolygonTeachingArea.add(Data.latLng33,Data.latLng34,Data.latLng35,Data.latLng36,
+                Data.latLng37,Data.latLng38,Data.latLng39,Data.latLng40,
+                Data.latLng41,Data.latLng42,Data.latLng43,Data.latLng44);
+        showPolygonLaboratoryArea.add(Data.latLng45,Data.latLng43,Data.latLng42,Data.latLng58,
+                Data.latLng49,Data.latLng50,Data.latLng51,Data.latLng52,
+                Data.latLng53,Data.latLng57,Data.latLng56);
+        showPolygonEastAthleticArea.add(Data.latLng46,Data.latLng47,Data.latLng48,
+                Data.latLng45, Data.latLng56,Data.latLng57,Data.latLng53,
+                Data.latLng54, Data.latLng55);
+
+        aMap.addPolygon(showPolygonWestAthleticArea.strokeWidth(0)
+                .fillColor(Data.getColorClass()[Data.DetermineTimeClass(Data.getTimeSpending(2))]));
+        aMap.addPolygon(showPolygonDormitory.strokeWidth(0)
+                .fillColor(Data.getColorClass()[Data.DetermineTimeClass(Data.getTimeSpending(3))]));
+        aMap.addPolygon(showPolygonTeachingArea.strokeWidth(0)
+                .fillColor(Data.getColorClass()[Data.DetermineTimeClass(Data.getTimeSpending(4))]));
+        aMap.addPolygon(showPolygonLaboratoryArea.strokeWidth(0)
+                .fillColor(Data.getColorClass()[Data.DetermineTimeClass(Data.getTimeSpending(6))]));
+        aMap.addPolygon(showPolygonEastAthleticArea.strokeWidth(0)
+                .fillColor(Data.getColorClass()[Data.DetermineTimeClass(Data.getTimeSpending(5))]));
+    }
+
 }

@@ -1,28 +1,34 @@
 package com.example.aywry.campus_guide_4.uTil;
 
+import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
 
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.services.core.LatLonPoint;
 
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.sql.Time;
 
 /**
  * Created by aywry on 11/27/2017.
  */
 
-public class Data {
+public class Data{
     private static LatLonPoint StartPoint = new LatLonPoint(31.772106,117.204622);
     private static LatLonPoint DestinationPoint = new LatLonPoint(31.768393,117.201546);
     private static int ColorClass[] = {
-            Color.argb(70, 148,0,12),
-            Color.argb(70, 191,26,0),
-            Color.argb(70, 244,0,41),
-            Color.argb(70, 255, 53,64),
-            Color.argb(70, 255, 63,123),
-            Color.argb(70, 255, 95,198),
-            Color.argb(70, 255, 142,85),
-            Color.argb(80, 245, 255,21) };
+            Color.argb(255, 148,0,12),
+            Color.argb(255, 191,26,0),
+            Color.argb(255, 244,0,41),
+            Color.argb(255, 255, 53,64),
+            Color.argb(255, 255, 63,123),
+            Color.argb(255, 255, 95,198),
+            Color.argb(255, 255, 142,85),
+            Color.argb(255, 245, 255,21) };
     /**
      * 0 TimeOfLibrary
      * 1 TimeOfArtSchool
@@ -33,7 +39,7 @@ public class Data {
      * 6 TimeOfLaboratoryArea
      */
     private static int[] TimeSpending = new int[7];
-
+    private static final int TimeGap = 720;
     public static final LatLng latLng1 = new LatLng(31.768375,117.201496);//,
     public static final LatLng latLng2 = new LatLng(31.770199,117.201046);//,
     public static final LatLng latLng3 = new LatLng(31.771996,117.197822);//,
@@ -93,15 +99,32 @@ public class Data {
     public static final LatLng latLng57 = new LatLng(31.771939,117.207639);//,
     public static final LatLng latLng58 = new LatLng(31.769795,117.206609);//,
 
+
     public static void setStartPoint(LatLonPoint i){StartPoint=i;}
     public static void setDestinationPoint(LatLonPoint i){DestinationPoint=i;}
     public static void setTimeSpending(int i){TimeSpending[i]+=1;}
     public static void setTimeSpending(int pos,int num){TimeSpending[pos]=num;}
-    public static void initialTimeSpending(){for(int i=0;i<7;i++) TimeSpending[i]=0;}
 
 
     public static LatLonPoint getStartPointInfo() {return StartPoint;}
     public static LatLonPoint getDestinationPointInfo() {return DestinationPoint;}
     public static int[] getColorClass(){return ColorClass;}
     public static int getTimeSpending(int i){return TimeSpending[i];}
+    public static int DetermineTimeClass(int i)
+    {
+
+        if(i>21*TimeGap) return 0;
+        else if(i>18*TimeGap) return 1;
+        else if(i>15*TimeGap) return 2;
+        else if(i>12*TimeGap) return 3;
+        else if(i>9*TimeGap) return 4;
+        else if(i>6*TimeGap) return 5;
+        else if(i>3*TimeGap) return 6;
+        return 7;
+
+        /*
+        if(i==0) return 7;
+        return 0;
+        */
+    }
 }

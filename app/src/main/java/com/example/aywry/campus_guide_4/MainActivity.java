@@ -118,6 +118,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int temp[] = ReadTimeArray();
         for(int i=0;i<7;i++) Data.setTimeSpending(i,temp[i]);
 
+        Intent TimeIntent = new Intent(MainActivity.this,LocationService.class);
+        startService(TimeIntent);
+
         button_AR = (Button)findViewById(R.id.button_1);
         button_AR.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -278,7 +281,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @Override
     protected void onDestroy() {
-        for(int i=0;i<7;i++)SaveTimeArray(Data.getTimeSpending(i));
         super.onDestroy();
         mapview.onDestroy();
         destroyLocation();
@@ -628,29 +630,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void SaveTimeArray(int a)
-    {
-        FileOutputStream out = null;
-        BufferedWriter writer = null;
-        try {
-            //设置文件名称，以及存储方式
-            out = openFileOutput("TimeArray", Context.MODE_APPEND);
-            //创建一个OutputStreamWriter对象，传入BufferedWriter的构造器中
-            writer = new BufferedWriter(new OutputStreamWriter(out));
-            //向文件中写入数据
-            writer.write(Integer.toString(a));
-            writer.newLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                writer.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     private int[] ReadTimeArray()
     {
         int ret[] = new int[7];
@@ -679,25 +658,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }
-        }
-
-        FileOutputStream out = null;
-        BufferedWriter writer = null;
-        try {
-            //设置文件名称，以及存储方式
-            out = openFileOutput("TimeArray", Context.MODE_PRIVATE);
-            //创建一个OutputStreamWriter对象，传入BufferedWriter的构造器中
-            writer = new BufferedWriter(new OutputStreamWriter(out));
-            //向文件中写入数据
-            writer.write(new String());
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                writer.close();
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         }
         return ret;
